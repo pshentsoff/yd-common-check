@@ -17,6 +17,7 @@ $old_errrep = error_reporting(E_STRICT | E_ALL);
 include('yd-common-check-constants.php');
 include('yd-common-check-urls.php');
 
+#echo YD_APPID.':'.YD_TOKEN."<br/>\n";
 
 /**
  * Допускаемые функции
@@ -79,6 +80,9 @@ foreach($api_urls as $protocol => $urls) {
       break;
     case 'SOAP.OAUTH':
       $options = array(
+        'token'=> YD_TOKEN,           //Токен или отладочный токен
+        'application_id'=> YD_APPID,  //Id приложения - application_id, он же client_id
+        'login'=> YD_LOGIN,
               'trace'=> YD_TRACE,
               'exceptions' => YD_EXCEPTIONS,
               'encoding' => YD_ENCODING,
@@ -160,11 +164,15 @@ function CheckJSON($urls, $options, $methods, $title) {
       }
     }
   }
+
 /**
  *  Фиксим баг
  *  "Warning: SoapClient::__doRequest(): XX is not a valid Stream-Context resource in [...]"
  *  https://bugs.php.net/bug.php?id=46427  
  **/ 
+function newSoapClient($options) {
+  return new SoapClient(NULL, $options);
+}
 
 function CheckSOAP($urls, $options, $methods, $title) {
   print_r("<hr /><h3>$title</h3>");
@@ -186,14 +194,30 @@ function CheckSOAP($urls, $options, $methods, $title) {
       # попытка решить баг другим рецептом
       if(defined('YD_RECREATE_CONTEXT') && YD_RECREATE_CONTEXT) {
         $options['stream_context'] = stream_context_create();      
-        function newSoapClient($options) {
-          return new SoapClient(NULL, $options);
-          }
+#        function newSoapClient($options) {
+#          return new SoapClient(NULL, $options);
+#          }
         $client = newSoapClient($options);
         } else {
         $client = new SoapClient(NULL, $options);
         }  
       }
+      
+    $ns = 'SOAP-ENV';
+    $name = '"http://schemas.xmlsoap.org/soap/envelope/"';
+    $headers = array();
+    if(isset($options['login'])) $headers['login'] = $options['login'];
+    if(isset($options['token'])) $headers['token'] = $options['token'];
+    if(isset($options['application_id'])) $headers['application_id'] = $options['application_id'];
+    if(isset($options['locale'])) $headers['locale'] = $options['locale'];
+    var_dump($headers);
+    if($headers) {
+      $soap_header = new SOAPHeader($ns, $name, $headers); 
+      var_dump($soap_header);
+      $client->__setSoapHeaders($soap_header);
+      }
+    var_dump($client);
+
     foreach($methods as $method) {
       #var_dump($client);
       $dt = date(DATE_RFC822);
