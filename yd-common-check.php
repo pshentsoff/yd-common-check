@@ -42,7 +42,7 @@ if(array_key_exists('method', $_GET)&&$_GET['method']) {
   if(in_array(strtolower($method), $methods_allow)) {
     $methods[] = $method;
     } else {
-    print_r('<h3>This method is not allowed, sorry.</h3>');
+    echo '<h3>This method is not allowed, sorry.</h3>';
     exit;
     }
   } else {
@@ -131,11 +131,11 @@ error_reporting($old_errrep);
  * Непосредственно функции 
  **/ 
 function CheckJSON($urls, $options, $methods, $title) {
-  print_r("<hr /><h3>$title</h3>");
+  echo "<hr /><h3>$title</h3>\n";
   foreach($urls as $key => $url) {
-    print_r('<hr />API version: <b>'.$key.'</b><br />');
+    echo "<hr />API version: <b>'.$key.'</b><br />\n";
     if(!$url) {
-      print_r('no url');
+      echo "no url<br/>\n";
       continue;
       }
     foreach($methods as $method) {
@@ -156,11 +156,11 @@ function CheckJSON($urls, $options, $methods, $title) {
       //Отправка запроса и получение результата 
       $result = @file_get_contents($url, 0, $context);
       
-      print_r('Function: <b>'.$method.'</b><br />');
-      print_r($dt."<br />");
-      print_r ('JSON: '.$result);
+      echo "Function: <b>'.$method.'</b><br />\n";
+      echo "$dt<br />\n";
+      echo "JSON: $result\n";
       $result = json_decode($result, true);
-      var_dump($result);
+      echo '<pre>'.print_r($result, true).'</pre>';
       }
     }
   }
@@ -175,11 +175,11 @@ function newSoapClient($options) {
 }
 
 function CheckSOAP($urls, $options, $methods, $title) {
-  print_r("<hr /><h3>$title</h3>");
+  echo "<hr /><h3>$title</h3>\n";
   foreach($urls as $key => $url) {
-    print_r('<hr />API version: <b>'.$key.'</b><br />');
+    echo "<hr />API version: <b>$key</b><br />\n";
     if(!$url) {
-      print_r('no url');
+      echo "no url\n";
       continue;
       }
     if(isset($client)) {
@@ -210,49 +210,48 @@ function CheckSOAP($urls, $options, $methods, $title) {
     if(isset($options['token'])) $headers['token'] = $options['token'];
     if(isset($options['application_id'])) $headers['application_id'] = $options['application_id'];
     if(isset($options['locale'])) $headers['locale'] = $options['locale'];
-    var_dump($headers);
+    echo '<pre>'.print_r($headers, true).'</pre>';
     if($headers) {
       $soap_header = new SOAPHeader($ns, $name, $headers); 
-      var_dump($soap_header);
+      echo '<pre>'.print_r($soap_header, true).'</pre>';
       $client->__setSoapHeaders($soap_header);
       }
-    var_dump($client);
+    echo '<pre>'.print_r($client, true).'</pre>';
 
     foreach($methods as $method) {
-      #var_dump($client);
       $dt = date(DATE_RFC822);
       $result = $client->__soapCall($method, array());
-      print_r('Function: <b>'.$method.'</b><br />');
-      print_r($dt."<br />");
-      var_dump($result);
+      echo "Function: <b>$method</b><br />\n";
+      echo "$dt<br />\n";
+      echo '<pre>'.print_r($result, true).'</pre>';
       }
     
     }
   }
   
 function CheckWSDL($urls, $options, $methods, $title) {
-  print_r("<hr /><h3>$title</h3>");
+  echo "<hr /><h3>$title</h3>\n";
   foreach($urls as $key => $url) {
-    print_r('<hr />Protocol: <b>'.$key.'</b><br />');
+    echo "<hr />Protocol: <b>$key</b><br />\n";
     if(!$url) {
-      print_r('no url');
+      echo "no url<br>\n";
       continue;
       }
     if(isset($client)) {
       # меняем url
-      #$client->__SetLocation($url);
+      $client->__SetLocation($url);
       } else {
       $options['location'] = $url;
       # или инициализируем объект SOAP
-      #$client = new SoapClient(NULL, $options);
+      $client = new SoapClient(NULL, $options);
       }
     foreach($methods as $method) {
 
       $dt = date(DATE_RFC822);
-      #$result = $client->__soapCall($method, array());
-      print_r('Function: <b>'.$method.'</b><br />');
-      print_r($dt."<br />");
-      var_dump($result);
+      $result = $client->__soapCall($method, array());
+      echo "Function: <b>$method</b><br />\n";
+      echo "$dt<br />\n";
+      echo '<pre>'.print_r($result, true).'</pre>';
       }
     
     }
